@@ -1,0 +1,241 @@
+# CourseNotes
+# Lec 1
+- ## Intro
+    - (un)structural data
+    - Fundamental concepts
+        - doc
+        - doc collection
+        - information need
+        - query
+        - relevant
+    - Doc indexing
+        - to avoid linearly scanning O(n)
+            - Book idx (alphabetical idx)
+            - Doc idx (ordered idx term)
+            - Doc idxing (describe doc by index term)
+    - TDM (result of idxing)
+                - retrieve docs by queries
+                - query vector
+                - doc vector
+    - query processing
+        - IR tasks
+            - provide docs from col that relevant to queries
+        - Query refinement
+            - process of reformulating initial query to improve retrival performence.
+        - Query expansion (eg. finding synonyms)
+        - Relevance Feedback
+            - perform new query based on result of initial query
+        - Query suggestion
+        - Query intent Detection
+            - informational
+            - navigational
+            - transactional
+    - IR model
+        - Ranked Retrieval
+        - Set Retrieval
+    - Classical IRMs
+        - Boolean Model
+            - exact match
+            - Q is in Boolean expression
+            - set Theory & Boolean Algebra
+        - VSM
+            - Q & D are represented by vectors
+            - rank d by relevance sim(q,d)
+            - Statistics & Vector Algebra
+        - Probabilistic model
+            - prob of relevance ( P(R|d,q) )
+            - Prob Theory
+        - Web IR
+            - Graph-based Ranking
+            - User Behavior Monitoring
+    - Evaluation
+        - Precision
+        - Recall
+
+# Lec 2
+
+- ## Boolean Model
+    - Doc idxing
+    - Query Processing
+    - Doc Retrieving
+        - Strategy (Inverted Index)
+        - Efficiency (Data structure)
+        - steps
+            - 1. D indx term extraction
+            - 2. Inverted idx construction
+            - 3. Retrieval by set op
+    - inverted idxing
+        - implementation 
+            - array (extremely Sparse)
+            - linked list
+        - dictionary (for terms)
+            - a pointer to posting list
+            - doc frequency (for efficienvy and weighting)
+        - posting list (for docs)
+            - list of docs
+            - term frequency in doc
+            - term position(s) in doc
+    - Doc retrieval steps:
+        - 1. locate term in dict
+        - 2. retrieve posting list
+        - locate
+        - retrieve
+        - 3. take (intersection / union) the two posting lists
+        - 4. return
+    - Questions:
+        - Why the index terms are sorted by alphabetical order in the dictionary?
+        - Why document are sorted by their IDs in postings lists?
+        - Why we store document frequency information?
+        - How do we processing a query using an inverted index in a basic Boolean retrieval model?
+    - posting list (docs) intersection with one 'AND'
+        - 2 pointers approach
+            ```
+            loop:
+                if A.docID == B.docID:
+                    resultList.append(A.docID)
+                    move pointer A
+                    move pointer B
+                else:
+                    move the pointer with smaller docID
+            ```
+    - posting list (docs) intersection with two 'AND'
+        - shorter first  (smaller doc frequency first)
+        - The simple and effective optimization is to process  the query in order of increasing document frequency of a term. This is why we keep doc freq in dict.
+    - Query Optimization
+        - shorter first for multiple 'AND' op
+        - skip pointer
+            - (num of items skipped) and (freq of the skip) tradeoff
+            - num of item skipped = sqrt(Length of posting list)
+    - Phrase query
+        - Bi-word index
+            - index every consecutive pair of terms in the doc as phrase
+        - positional index
+    - DRAWBACKS:
+        - queries formulated by user are often too simplistic
+        - return too much or too few
+    - More indexing
+        - representative words
+        - non-representative words (ie. stopword)
+        - index selection
+            - only nouns or
+            - no stopwords or
+            - full text indexing
+        - tokenization  (split())
+        - stemming
+            - goal
+                - transform the words into base form
+            - morphemes
+                - stems
+                - affixes
+            - inflectional morphology
+                - simple like (s,ed,ing)
+            - derivational morphology
+                - complex like (ion, ble)
+        - lemmatization
+            - similar to stemming
+            - (is, am, are) -> be
+        - Index construction pipeline
+            - 1. docs
+            - 2. tokenization
+            - 3. linguistic modules
+                - normalization
+                - stemming
+            - 4. indexing
+            - 5. inverted index
+
+# Lec 3
+
+- ## Vector Space Model (VSM)
+    - Doc / query representation
+        - weighting schemes
+            - TF
+            - IDF
+            - Doc length
+        - Doc retrieval
+            - vector similarity
+                - doc VS query
+        - Doc vector
+            - a doc is represented as a vec of index terms
+            - each dimension refers to an index term in dict.
+            - the value in the vector is WEIGHT
+            - DRAWBACK: loss relative ordering
+    - Term Weighting Schemes
+        - "A term is important in the doc" = 
+        - "A term is representative to the doc" = 
+        - "A term can better discrimiate the doc"
+        - tf(t,d) 
+            - how many times does term T appeared in doc D
+        - df(t)
+            - how many docs contain term T
+        - IDF Assumption
+            - A term appears in only a few docs, is a better discriminator.
+        - IDF
+            - N is total number of docs
+            - idf_t = log_10(N/df_t)
+        - TF-IDF Weight
+            - w(t,d) = tf(t,d) * idf(t)
+            - tf-idf : how important is the term t in representing doc d.
+            - idf : how well the term can distinguish docs （can be thought of angle)
+            - tf : the intensity of idf (can be thought of length)
+        - Normalization
+            - Euclidean normalization
+                - df vector divided by |df vec|
+    - Vector Space - Query Vectors
+        - Queries = very short doc
+    - Query-Doc Similarity
+        - sim(dv, qv)   similarity of doc vector and query vector
+            - Dot product approach
+            - cosine similarity
+            - algorithms
+                - term-at-a-time query processing
+                    - using accumulators
+                    - 2 query terms = 2 loops
+                - doc-at-a-time query processing
+                    - 1 loop
+    - TF-IDF variations
+        - to prevent bias towards longer documents:
+            - wf-idf : Sub-linear TF Scaling (Log freq)
+                - reducing the importance of tf
+                - wf(t, d) = 1 + log( tf(t,d) )
+            - maximum TF normalization
+    - DRAWBACKS:
+        - Assumes terms are independent
+        - weighting is intuitive
+        - calculation intensive
+        - add new term -> recalculate all vectors
+            
+- compare VSM with Boolean model
+
+# Lec 4
+
+- ## Relevance feedback
+    - why
+        - synonymy
+        - affect recall
+    - Global method
+        - expanding or reformulating query with a thesaurus (词库)
+    - local method
+        - adjust query relative to the found doc
+        - relevance feedback
+        - pseudo RF
+        - implicit Feedback
+
+    - Rocchio Algorithm
+        - Starting from q0, the new query moves you some distance toward the centroid of the relevant documents and some distance away from the centroid of the nonrelevant documents.
+        - The formula modifies the query term weights by adding a component based on the average weight in the relevant documents and subtracting a component based on the average weight in the non-relevant documents.
+    - Pseudo Relevance feedback (blind RF)
+        - assuming first K docs are relevance
+        - from K docs, choose N terms
+        - Weight : alpha, beta, gama
+        - number of iterations
+    - implicit (indirect) RF
+        - user behavior
+        - click, duration of time, history
+- Query expansion
+    - query suggestion
+    - recommendation
+    - query expansion with semantic knowledge
+        - synonym
+        - Thesaurus
+        - WorldNet Synset
+            - Every synset contains a group of synonymous words
